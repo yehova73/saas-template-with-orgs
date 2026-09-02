@@ -97,7 +97,10 @@ export default async function OrganizationSettingsPage() {
         currentUserId={user.id}
         organization={details!}
       />
-      <OrganizationBillingSettings />
+      <OrganizationBillingSettings
+        organizationId={organization.id}
+        userEmail={user.email}
+      />
       <OrganizationDangerZoneSettings />
     </div>
   );

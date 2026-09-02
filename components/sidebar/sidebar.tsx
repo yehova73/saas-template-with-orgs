@@ -80,7 +80,7 @@ export const AppSidebar: React.FC<{
 
   async function handleProjectChange(projectId: string) {
     if (projectId === localActiveProjectId) return;
-    await changeProject(projectId);
+    await changeProject(projectId, { navigate: `/app/${projectId}` });
   }
 
   return (

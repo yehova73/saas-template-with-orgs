@@ -3,7 +3,10 @@ import { BillingNotAvailable } from "./billing-not-avaliable";
 import { BillingUI } from "./billing-ui";
 import { getCurrentSubscriptionAction } from "@/actions/account/subscriptions/get-current-subscription";
 
-export const OrganizationBillingSettings: React.FC = async () => {
+export const OrganizationBillingSettings: React.FC<{
+  organizationId: string;
+  userEmail: string;
+}> = async ({ organizationId, userEmail }) => {
   let hasPermission = false;
 
   try {
@@ -19,5 +22,11 @@ export const OrganizationBillingSettings: React.FC = async () => {
 
   const [subscription] = await Promise.all([getCurrentSubscriptionAction()]);
 
-  return <BillingUI subscription={subscription} />;
+  return (
+    <BillingUI
+      subscription={subscription}
+      organizationId={organizationId}
+      userEmail={userEmail}
+    />
+  );
 };
