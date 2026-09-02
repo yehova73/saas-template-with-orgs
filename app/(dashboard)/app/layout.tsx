@@ -102,7 +102,8 @@ export default async function DashboardLayout({
                     activeProjectId={user.activeProjectId}
                     permissions={{
                       createProject:
-                        !!activeOrganizationContext?.membership.role.createProject,
+                        !!activeOrganizationContext?.membership.role
+                          .createProject,
                     }}
                   />
                   <UserDropdown
@@ -116,7 +117,8 @@ export default async function DashboardLayout({
                     }
                     permissions={{
                       viewOrganizationSettings:
-                        !!activeOrganizationContext?.membership.role.manageSettings,
+                        !!activeOrganizationContext?.membership.role
+                          .manageSettings,
                     }}
                     organizations={memberships.map((membership) => ({
                       id: membership.organization.id,

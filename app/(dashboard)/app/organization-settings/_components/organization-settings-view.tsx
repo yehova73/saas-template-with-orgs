@@ -236,9 +236,7 @@ export function OrganizationSettingsView({
                   <Label>Role</Label>
                   <Select
                     value={inviteRole}
-                    onValueChange={(value) =>
-                      setInviteRole(value)
-                    }
+                    onValueChange={(value) => setInviteRole(value)}
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue />

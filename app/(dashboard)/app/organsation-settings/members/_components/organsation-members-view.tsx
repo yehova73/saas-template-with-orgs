@@ -314,9 +314,7 @@ export function OrgansationMembersView({
                     {row.status === "active" ? (
                       <Select
                         value={row.role.id}
-                        onValueChange={(value) =>
-                          handleRoleChange(row, value)
-                        }
+                        onValueChange={(value) => handleRoleChange(row, value)}
                         disabled={
                           updatingMemberRole || row.userId === currentUserId
                         }
@@ -409,9 +407,7 @@ export function OrgansationMembersView({
               <Label>Role</Label>
               <Select
                 value={inviteRole}
-                onValueChange={(value) =>
-                  setInviteRole(value)
-                }
+                onValueChange={(value) => setInviteRole(value)}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue />

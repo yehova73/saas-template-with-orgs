@@ -17,7 +17,8 @@ import {
 export const updateOrganizationNameAction = async (data: {
   name: string;
 }): Promise<ServerActionResponse<{ name: string }>> => {
-  const { organization } = await requireOrganizationPermission("manageSettings");
+  const { organization } =
+    await requireOrganizationPermission("manageSettings");
   const name = data.name.trim();
 
   if (!name) {
@@ -44,7 +45,8 @@ export const updateOrganizationNameAction = async (data: {
 export const deleteOrganizationAction = async (): Promise<
   ServerActionResponse<{ nextOrgId: string | null }>
 > => {
-  const { organization, user } = await requireOrganizationPermission("manageSettings");
+  const { organization, user } =
+    await requireOrganizationPermission("manageSettings");
 
   const activePaidSubscription = await prisma.subscription.findFirst({
     where: {
@@ -91,7 +93,8 @@ export const inviteOrganizationMemberAction = async (data: {
   email: string;
   roleId: string;
 }): Promise<ServerActionResponse<{ id: string }>> => {
-  const { organization, user } = await requireOrganizationPermission("manageMembers");
+  const { organization, user } =
+    await requireOrganizationPermission("manageMembers");
   const email = normalizeEmail(data.email);
 
   const permission = await canInviteMember();
@@ -178,7 +181,8 @@ export const inviteOrganizationMemberAction = async (data: {
 export const resendOrganizationInviteAction = async (
   inviteId: string,
 ): Promise<ServerActionResponse<null>> => {
-  const { organization, user } = await requireOrganizationPermission("manageMembers");
+  const { organization, user } =
+    await requireOrganizationPermission("manageMembers");
   const invite = await prisma.organizationInvite.findFirst({
     where: {
       id: inviteId,

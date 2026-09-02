@@ -18,7 +18,8 @@ export async function createProjectAction({
   description?: string;
 }): Promise<ServerActionResponse<{ project: { id: string; name: string } }>> {
   try {
-    const { organization, user } = await requireOrganizationPermission("createProject");
+    const { organization, user } =
+      await requireOrganizationPermission("createProject");
 
     const permission = await canCreateProject();
     if (!permission.allowed) {

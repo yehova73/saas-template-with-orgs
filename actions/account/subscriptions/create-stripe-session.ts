@@ -8,7 +8,8 @@ import { ServerActionResponse } from "@/hooks/use-server-action";
 export const createStripeSessionAction = async (
   priceId: string,
 ): Promise<ServerActionResponse<{ url: string | null }>> => {
-  const { user, organization } = await requireOrganizationPermission("manageBilling");
+  const { user, organization } =
+    await requireOrganizationPermission("manageBilling");
 
   const organizationDetails = await prisma.organization.findFirst({
     where: { id: organization.id },

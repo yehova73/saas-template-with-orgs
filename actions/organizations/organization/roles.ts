@@ -13,7 +13,8 @@ export type OrganizationRolePermissions = {
 };
 
 export async function getOrganizationRoles() {
-  const { organization } = await requireOrganizationPermission("manageSettings");
+  const { organization } =
+    await requireOrganizationPermission("manageSettings");
   return prisma.organizationUserRole.findMany({
     where: { organizationId: organization.id },
     orderBy: { name: "asc" },
@@ -23,9 +24,11 @@ export async function getOrganizationRoles() {
 export async function createOrganizationRoleAction(
   data: OrganizationRolePermissions,
 ): Promise<ServerActionResponse<{ id: string }>> {
-  const { organization } = await requireOrganizationPermission("manageSettings");
+  const { organization } =
+    await requireOrganizationPermission("manageSettings");
   const name = data.name.trim();
-  if (!name) return { status: "error", message: { title: "Role name is required" } };
+  if (!name)
+    return { status: "error", message: { title: "Role name is required" } };
 
   const role = await prisma.organizationUserRole.create({
     data: { ...data, name, organizationId: organization.id },
@@ -38,9 +41,11 @@ export async function updateOrganizationRoleAction(
   roleId: string,
   data: OrganizationRolePermissions,
 ): Promise<ServerActionResponse<null>> {
-  const { organization } = await requireOrganizationPermission("manageSettings");
+  const { organization } =
+    await requireOrganizationPermission("manageSettings");
   const name = data.name.trim();
-  if (!name) return { status: "error", message: { title: "Role name is required" } };
+  if (!name)
+    return { status: "error", message: { title: "Role name is required" } };
 
   await prisma.organizationUserRole.updateMany({
     where: { id: roleId, organizationId: organization.id },
@@ -52,12 +57,24 @@ export async function updateOrganizationRoleAction(
 export async function deleteOrganizationRoleAction(
   roleId: string,
 ): Promise<ServerActionResponse<null>> {
-  const { organization } = await requireOrganizationPermission("manageSettings");
-  const membershipCount = await prisma.organizationMembership.count({ where: { roleId, organizationId: organization.id } });
-  const inviteCount = await prisma.organizationInvite.count({ where: { roleId, organizationId: organization.id } });
+  const { organization } =
+    await requireOrganizationPermission("manageSettings");
+  const membershipCount = await prisma.organizationMembership.count({
+    where: { roleId, organizationId: organization.id },
+  });
+  const inviteCount = await prisma.organizationInvite.count({
+    where: { roleId, organizationId: organization.id },
+  });
   if (membershipCount || inviteCount) {
-    return { status: "error", message: { title: "Reassign members and invites before deleting this role" } };
+    return {
+      status: "error",
+      message: {
+        title: "Reassign members and invites before deleting this role",
+      },
+    };
   }
-  await prisma.organizationUserRole.deleteMany({ where: { id: roleId, organizationId: organization.id } });
+  await prisma.organizationUserRole.deleteMany({
+    where: { id: roleId, organizationId: organization.id },
+  });
   return { status: "ok", data: null, message: { title: "Role deleted" } };
 }

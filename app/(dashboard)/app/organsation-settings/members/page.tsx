@@ -3,7 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { OrgansationMembersView } from "./_components/organsation-members-view";
 
 export default async function OrgansationSettingsMembersPage() {
-  const { organization, user } = await requireOrganizationPermission("manageMembers");
+  const { organization, user } =
+    await requireOrganizationPermission("manageMembers");
   const details = await prisma.organization.findUnique({
     where: { id: organization.id },
     select: {
