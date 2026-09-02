@@ -1,0 +1,297 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+  runtime  = "nodejs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model ContactRequest {
+  id        String @id @default(cuid())
+  firstName String
+  lastName  String
+  subject   String
+  email     String
+  message   String
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+
+  image                 String?
+  password              String?
+  passwordResetToken    String?   @unique
+  passwordResetTokenExp DateTime?
+  deletedAt             DateTime?
+
+  hasCompletedOnboardingAt DateTime?
+
+  accounts Account[]
+
+  sessions Session[]
+
+  signedUpAt               DateTime                  @default(now())
+  lastActivityAt           DateTime                  @default(now())
+  organizationsCreated     Int                       @default(0)
+  userNotificationSettings UserNotificationSettings?
+  changePasswordTokens     ChangePasswordToken[]
+  changeEmailTokens        ChangeEmailToken[]
+  feedbacks                Feedback[]
+  userQuickStartActions    UserQuickStartActions?
+  organizationMemberships  OrganizationMembership[]
+  organizationInvitesSent  OrganizationInvite[]      @relation("OrganizationInviteInviter")
+  projectMemberships       ProjectMembership[]
+}
+
+model Organization {
+  id   String @id @default(cuid())
+  name String
+
+  trialStartedAt DateTime  @default(now())
+  trialEndsAt    DateTime?
+  deletedAt      DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships   OrganizationMembership[]
+  invites       OrganizationInvite[]
+  subscription  Subscription?
+  featureAccess OrganizationFeatureAccess?
+  projects      Project[]
+}
+
+model OrganizationMembership {
+  id             String           @id @default(cuid())
+  userId         String
+  organizationId String
+  role           OrganizationRole @default(USER)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+  @@index([organizationId])
+}
+
+model OrganizationInvite {
+  id              String           @id @default(cuid())
+  organizationId  String
+  email           String
+  role            OrganizationRole @default(USER)
+  tokenHash       String           @unique
+  expiresAt       DateTime
+  acceptedAt      DateTime?
+  revokedAt       DateTime?
+  invitedByUserId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  invitedBy    User?        @relation("OrganizationInviteInviter", fields: [invitedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@index([email])
+}
+
+model Project {
+  id             String  @id @default(cuid())
+  organizationId String
+  name           String
+  description    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organization Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  memberships  ProjectMembership[]
+  apiKeys      ApiKey[]
+
+  @@index([organizationId])
+}
+
+model ApiKey {
+  id        String    @id @default(cuid())
+  projectId String
+  name      String
+  keyHash   String    @unique
+  keyPrefix String
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model ProjectMembership {
+  id        String      @id @default(cuid())
+  projectId String
+  userId    String
+  role      ProjectRole @default(USER)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@index([projectId])
+  @@index([userId])
+}
+
+model UserQuickStartActions {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ChangeEmailToken {
+  id            String    @id @default(cuid())
+  userId        String
+  newEmail      String
+  createdAt     DateTime  @default(now())
+  changedAt     DateTime?
+  invalidatedAt DateTime?
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Account {
+  id                       String  @id @default(cuid())
+  userId                   String
+  type                     String
+  provider                 String
+  providerAccountId        String
+  refresh_token            String?
+  access_token             String?
+  expires_at               Int?
+  token_type               String?
+  scope                    String?
+  id_token                 String?
+  session_state            String?
+  refresh_token_expires_in Int?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model OrganizationFeatureAccess {
+  id             String @id @default(cuid())
+  organizationId String @unique
+
+  projectsLimit Int? @default(3)
+  membersLimit  Int? @default(5)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  organizationId       String?            @unique
+  stripeSubscriptionId String?            @unique
+  stripeCustomerId     String?
+  stripePriceId        String?
+  type                 SubscriptionType
+  status               SubscriptionStatus
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+
+  subscriptionStartedAt  DateTime?
+  subscriptionCanceledAt DateTime?
+
+  cancellationReason  String?
+  cancelationFeedback String?
+
+  priceId String?
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+}
+
+model Feedback {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  rating    String
+  category  String
+  feedback  String
+}
+
+enum SubscriptionType {
+  STARTER
+  PRO
+  ULTIMATE
+}
+
+enum SubscriptionStatus {
+  INACTIVE
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  PAYMENT_FAILED
+}
+
+enum SubscriptionPeriod {
+  MONTHLY
+  YEARLY
+}
+
+enum OrganizationRole {
+  CREATOR
+  ADMIN
+  USER
+}
+
+enum ProjectRole {
+  ADMIN
+  USER
+}
+
+model UserNotificationSettings {
+  id                     String  @id @default(cuid())
+  userId                 String  @unique
+  user                   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  importantNotifications Boolean @default(true)
+  marketingEmails        Boolean @default(true)
+  devUpdates             Boolean @default(true)
+}
+
+model ChangePasswordToken {
+  id            String    @id @default(cuid())
+  userId        String
+  createdAt     DateTime  @default(now())
+  changedAt     DateTime?
+  invalidatedAt DateTime?
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
