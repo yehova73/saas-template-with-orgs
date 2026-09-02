@@ -1,17 +1,18 @@
-import { requireOrganizationAdmin } from "@/actions/organizations/organization";
+import { requireOrganizationPermission } from "@/actions/organizations/organization";
 import { prisma } from "@/lib/prisma";
 import { OrgansationMembersView } from "./_components/organsation-members-view";
 
 export default async function OrgansationSettingsMembersPage() {
-  const { organization, user } = await requireOrganizationAdmin();
+  const { organization, user } = await requireOrganizationPermission("manageMembers");
   const details = await prisma.organization.findUnique({
     where: { id: organization.id },
     select: {
       memberships: {
         include: {
           user: { select: { email: true, name: true, image: true, id: true } },
+          role: { select: { id: true, name: true } },
         },
-        orderBy: [{ role: "asc" }, { createdAt: "asc" }],
+        orderBy: [{ role: { name: "asc" } }, { createdAt: "asc" }],
       },
       invites: {
         where: { revokedAt: null },
@@ -19,11 +20,15 @@ export default async function OrgansationSettingsMembersPage() {
         select: {
           id: true,
           email: true,
-          role: true,
+          role: { select: { id: true, name: true } },
           expiresAt: true,
           createdAt: true,
           acceptedAt: true,
         },
+      },
+      roles: {
+        orderBy: { name: "asc" },
+        select: { id: true, name: true },
       },
     },
   });

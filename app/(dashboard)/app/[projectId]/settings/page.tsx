@@ -1,7 +1,7 @@
 import {
   getProjectWithMemberships,
-  requireProjectAdmin,
   getOrganizationMembers,
+  requireProjectPermission,
 } from "@/actions/organizations/projects/project";
 import { DashboardPageHeader } from "@/components/dashboard-page-header";
 import { ProjectSettingsView } from "./_components/project-settings-view";
@@ -19,8 +19,7 @@ export default async function ProjectSettingsPage({
 }: ProjectSettingsPageProps) {
   const { projectId } = await params;
 
-  // Verify user is project admin
-  await requireProjectAdmin(projectId);
+  await requireProjectPermission(projectId, "manageSettings");
 
   // Fetch project with members and organization members
   const [project, orgMembers] = await Promise.all([

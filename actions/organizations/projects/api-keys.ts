@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { requireProjectAdmin } from "./project";
+import { requireProjectPermission } from "./project";
 import { ServerActionResponse } from "@/hooks/use-server-action";
 import { revalidatePath } from "next/cache";
 import crypto from "crypto";
@@ -16,7 +16,7 @@ function hashKey(key: string): string {
 }
 
 export async function getProjectApiKeys(projectId: string) {
-  await requireProjectAdmin(projectId);
+  await requireProjectPermission(projectId, "manageSettings");
 
   return prisma.apiKey.findMany({
     where: { projectId },
@@ -50,7 +50,7 @@ export async function createApiKeyAction({
   }>
 > {
   try {
-    await requireProjectAdmin(projectId);
+    await requireProjectPermission(projectId, "manageSettings");
 
     if (!name.trim()) {
       return {
@@ -100,7 +100,7 @@ export async function deleteApiKeyAction({
   apiKeyId: string;
 }): Promise<ServerActionResponse<null>> {
   try {
-    await requireProjectAdmin(projectId);
+    await requireProjectPermission(projectId, "manageSettings");
 
     await prisma.apiKey.delete({
       where: { id: apiKeyId, projectId },

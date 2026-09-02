@@ -31,14 +31,13 @@ import { useRouter } from "next/navigation";
 import { useMemo } from "react";
 import { toast } from "sonner";
 import { useCreateOrganizationModal } from "../../../../components/modals/create-organization-modal/use-create-organization-modal";
-import { OrganizationRole } from "@/lib/generated/prisma/browser";
 
 export const UserDropdown: React.FC<{
   user: { name: string; email: string; image?: string };
   organizations: Array<{
     id: string;
     name: string;
-    role: OrganizationRole;
+    role: { id: string; name: string };
   }>;
   activeOrganizationId?: string;
   permissions: {

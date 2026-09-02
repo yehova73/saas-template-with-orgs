@@ -12,7 +12,10 @@ import { hashInviteToken } from "./utils";
 export const getOrganizationInviteByToken = async (token: string) => {
   const invite = await prisma.organizationInvite.findUnique({
     where: { tokenHash: hashInviteToken(token) },
-    include: { organization: { select: { id: true, name: true } } },
+    include: {
+      organization: { select: { id: true, name: true } },
+      role: { select: { id: true, name: true } },
+    },
   });
 
   if (!invite || invite.revokedAt || invite.acceptedAt) {
@@ -69,7 +72,7 @@ const acceptInviteForUser = async (params: {
       create: {
         userId: user.id,
         organizationId: invite.organizationId,
-        role: invite.role,
+        roleId: invite.roleId,
       },
       update: {},
     }),
@@ -138,7 +141,7 @@ export const acceptOrganizationInviteByIdAction = async (
       acceptedAt: true,
       revokedAt: true,
       expiresAt: true,
-      role: true,
+      roleId: true,
     },
   });
 
@@ -172,7 +175,7 @@ export const acceptOrganizationInviteByIdAction = async (
       create: {
         userId: session.user.id,
         organizationId: invite.organizationId,
-        role: invite.role,
+        roleId: invite.roleId,
       },
       update: {},
     }),

@@ -21,7 +21,7 @@ type JoinInviteViewProps = {
   accountExists: boolean;
   invite: {
     email: string;
-    role: string;
+    role: { id: string; name: string };
     organization: { id: string; name: string };
   } | null;
 };
@@ -81,7 +81,7 @@ export function JoinInviteView({
             Join {invite.organization.name}
           </h1>
           <p className="text-sm text-muted-foreground">
-            Invited as {invite.role.toLowerCase()} using {invite.email}.
+            Invited as {invite.role.name} using {invite.email}.
           </p>
         </div>
       </div>

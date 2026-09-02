@@ -17,7 +17,7 @@ import { Loader2, MailOpen } from "lucide-react";
 type Invite = {
   id: string;
   email: string;
-  role: string;
+  role: { id: string; name: string };
   expiresAt: Date;
   createdAt: Date;
   organization: { id: string; name: string };
@@ -66,7 +66,7 @@ export function InvitesView({ invites }: { invites: Invite[] }) {
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline" className="capitalize">
-                      {invite.role.toLowerCase()}
+                      {invite.role.name}
                     </Badge>
                   </TableCell>
                   <TableCell>

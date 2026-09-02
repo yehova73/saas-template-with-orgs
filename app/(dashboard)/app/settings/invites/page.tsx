@@ -11,12 +11,8 @@ export default async function InvitesPage() {
       revokedAt: null,
       organization: { deletedAt: null },
     },
-    select: {
-      id: true,
-      email: true,
-      role: true,
-      expiresAt: true,
-      createdAt: true,
+    include: {
+      role: { select: { id: true, name: true } },
       organization: { select: { id: true, name: true } },
     },
     orderBy: { createdAt: "desc" },

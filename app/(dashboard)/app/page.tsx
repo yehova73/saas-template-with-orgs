@@ -18,7 +18,7 @@ const DashboardPage: React.FC = async () => {
     getActiveOrganizationContext(),
   ]);
 
-  const isAdmin = activeOrgContext?.membership.role === "ADMIN";
+  const isAdmin = !!activeOrgContext?.membership.role.createProject;
 
   return (
     <div className="space-y-6 w-full max-w-7xl mx-auto">

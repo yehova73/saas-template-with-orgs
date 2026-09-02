@@ -42,7 +42,6 @@ import {
   SectionTitle,
   SettingRow,
 } from "../../settings/_components/components";
-import { OrganizationRole } from "@/lib/generated/prisma/browser";
 import useServerAction from "@/hooks/use-server-action";
 
 type OrganizationSettingsViewProps = {
@@ -51,13 +50,13 @@ type OrganizationSettingsViewProps = {
     name: string;
     memberships: Array<{
       id: string;
-      role: OrganizationRole;
+      role: { id: string; name: string };
       user: { email: string; name: string | null; image: string | null };
     }>;
     invites: Array<{
       id: string;
       email: string;
-      role: OrganizationRole;
+      role: { id: string; name: string };
       expiresAt: Date;
     }>;
   };
@@ -72,7 +71,7 @@ export function OrganizationSettingsView({
 }: OrganizationSettingsViewProps) {
   const [name, setName] = useState(organization.name);
   const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState<"ADMIN" | "USER">("USER");
+  const [inviteRole, setInviteRole] = useState("");
   const router = useRouter();
   const { update } = useSession();
 
@@ -101,7 +100,7 @@ export function OrganizationSettingsView({
 
   async function handleInvite(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const data = await inviteMember({ email: inviteEmail, role: inviteRole });
+    const data = await inviteMember({ email: inviteEmail, roleId: inviteRole });
     if (data !== null) {
       setInviteEmail("");
     }
@@ -202,7 +201,7 @@ export function OrganizationSettingsView({
                   {index > 0 && <Divider />}
                   <SettingRow
                     title={membership.user.name || membership.user.email}
-                    desc={`${membership.user.email} - ${membership.role.toLowerCase()}`}
+                    desc={`${membership.user.email} - ${membership.role.name}`}
                   >
                     <Button
                       variant="outline"
@@ -238,7 +237,7 @@ export function OrganizationSettingsView({
                   <Select
                     value={inviteRole}
                     onValueChange={(value) =>
-                      setInviteRole(value as "ADMIN" | "USER")
+                      setInviteRole(value)
                     }
                   >
                     <SelectTrigger className="w-full">
@@ -269,7 +268,7 @@ export function OrganizationSettingsView({
                   <Divider />
                   <SettingRow
                     title={invite.email}
-                    desc={`${invite.role.toLowerCase()} invite expires ${invite.expiresAt.toLocaleDateString()}`}
+                    desc={`${invite.role.name} invite expires ${invite.expiresAt.toLocaleDateString()}`}
                   >
                     <div className="flex items-center gap-2">
                       <Button

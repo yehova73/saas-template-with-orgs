@@ -74,7 +74,7 @@ export const handleSubscriptionStatusUpdate = async (params: {
     include: {
       subscription: true,
       memberships: {
-        where: { role: "ADMIN" },
+        where: { role: { manageBilling: true } },
         include: { user: { select: { email: true, name: true } } },
       },
     },

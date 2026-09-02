@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
             organization: {
               include: {
                 memberships: {
-                  where: { role: "ADMIN" },
+                  where: { role: { manageBilling: true } },
                   include: { user: { select: { email: true, name: true } } },
                 },
               },
@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
               organization: {
                 include: {
                   memberships: {
-                    where: { role: "ADMIN" },
+                    where: { role: { manageBilling: true } },
                     include: { user: { select: { email: true, name: true } } },
                   },
                 },

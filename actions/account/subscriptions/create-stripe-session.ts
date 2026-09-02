@@ -1,6 +1,6 @@
 "use server";
 
-import { requireOrganizationAdmin } from "@/actions/organizations/organization";
+import { requireOrganizationPermission } from "@/actions/organizations/organization";
 import { prisma } from "@/lib/prisma";
 import { stripe } from "./config";
 import { ServerActionResponse } from "@/hooks/use-server-action";
@@ -8,7 +8,7 @@ import { ServerActionResponse } from "@/hooks/use-server-action";
 export const createStripeSessionAction = async (
   priceId: string,
 ): Promise<ServerActionResponse<{ url: string | null }>> => {
-  const { user, organization } = await requireOrganizationAdmin();
+  const { user, organization } = await requireOrganizationPermission("manageBilling");
 
   const organizationDetails = await prisma.organization.findFirst({
     where: { id: organization.id },

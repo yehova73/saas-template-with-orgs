@@ -4,7 +4,7 @@ import { ServerActionResponse } from "@/hooks/use-server-action";
 import { emailService } from "@/lib/emails/email-service";
 import { prisma } from "@/lib/prisma";
 import { addDays } from "date-fns";
-import { requireOrganizationAdmin } from "./organization";
+import { requireOrganizationPermission } from "./organization";
 import { canInviteMember } from "./check-permissions";
 import {
   createInviteToken,
@@ -13,12 +13,11 @@ import {
   INVITE_EXPIRATION_DAYS,
   buildInviteUrl,
 } from "./utils";
-import { OrganizationRole } from "@/lib/generated/prisma/browser";
 
 export const updateOrganizationNameAction = async (data: {
   name: string;
 }): Promise<ServerActionResponse<{ name: string }>> => {
-  const { organization } = await requireOrganizationAdmin();
+  const { organization } = await requireOrganizationPermission("manageSettings");
   const name = data.name.trim();
 
   if (!name) {
@@ -45,7 +44,7 @@ export const updateOrganizationNameAction = async (data: {
 export const deleteOrganizationAction = async (): Promise<
   ServerActionResponse<{ nextOrgId: string | null }>
 > => {
-  const { organization, user } = await requireOrganizationAdmin();
+  const { organization, user } = await requireOrganizationPermission("manageSettings");
 
   const activePaidSubscription = await prisma.subscription.findFirst({
     where: {
@@ -90,9 +89,9 @@ export const deleteOrganizationAction = async (): Promise<
 
 export const inviteOrganizationMemberAction = async (data: {
   email: string;
-  role: OrganizationRole;
+  roleId: string;
 }): Promise<ServerActionResponse<{ id: string }>> => {
-  const { organization, user } = await requireOrganizationAdmin();
+  const { organization, user } = await requireOrganizationPermission("manageMembers");
   const email = normalizeEmail(data.email);
 
   const permission = await canInviteMember();
@@ -151,7 +150,7 @@ export const inviteOrganizationMemberAction = async (data: {
     data: {
       organizationId: organization.id,
       email,
-      role: data.role,
+      roleId: data.roleId,
       tokenHash: hashInviteToken(token),
       expiresAt: addDays(new Date(), INVITE_EXPIRATION_DAYS),
       invitedByUserId: user.id,
@@ -179,7 +178,7 @@ export const inviteOrganizationMemberAction = async (data: {
 export const resendOrganizationInviteAction = async (
   inviteId: string,
 ): Promise<ServerActionResponse<null>> => {
-  const { organization, user } = await requireOrganizationAdmin();
+  const { organization, user } = await requireOrganizationPermission("manageMembers");
   const invite = await prisma.organizationInvite.findFirst({
     where: {
       id: inviteId,
@@ -226,7 +225,7 @@ export const resendOrganizationInviteAction = async (
 export const revokeOrganizationInviteAction = async (
   inviteId: string,
 ): Promise<ServerActionResponse<null>> => {
-  const { organization } = await requireOrganizationAdmin();
+  const { organization } = await requireOrganizationPermission("manageMembers");
 
   await prisma.organizationInvite.updateMany({
     where: {
@@ -249,7 +248,7 @@ export const revokeOrganizationInviteAction = async (
 export const removeOrganizationMemberAction = async (
   membershipId: string,
 ): Promise<ServerActionResponse<null>> => {
-  const { organization } = await requireOrganizationAdmin();
+  const { organization } = await requireOrganizationPermission("manageMembers");
   const membership = await prisma.organizationMembership.findFirst({
     where: { id: membershipId, organizationId: organization.id },
   });
@@ -259,19 +258,6 @@ export const removeOrganizationMemberAction = async (
       status: "error",
       message: { title: "Member not found" },
     };
-  }
-
-  if (membership.role === "ADMIN") {
-    const adminCount = await prisma.organizationMembership.count({
-      where: { organizationId: organization.id, role: "ADMIN" },
-    });
-
-    if (adminCount <= 1) {
-      return {
-        status: "error",
-        message: { title: "Organizations need at least one admin" },
-      };
-    }
   }
 
   await prisma.organizationMembership.delete({ where: { id: membership.id } });
@@ -286,12 +272,12 @@ export const removeOrganizationMemberAction = async (
 
 export const updateOrganizationMemberRoleAction = async (data: {
   membershipId: string;
-  role: OrganizationRole;
+  roleId: string;
 }): Promise<ServerActionResponse<null>> => {
-  const { organization } = await requireOrganizationAdmin();
+  const { organization } = await requireOrganizationPermission("manageMembers");
   const membership = await prisma.organizationMembership.findFirst({
     where: { id: data.membershipId, organizationId: organization.id },
-    select: { id: true, role: true },
+    select: { id: true, roleId: true },
   });
 
   if (!membership) {
@@ -301,29 +287,19 @@ export const updateOrganizationMemberRoleAction = async (data: {
     };
   }
 
-  if (membership.role === data.role) {
+  const role = await prisma.organizationUserRole.findFirst({
+    where: { id: data.roleId, organizationId: organization.id },
+    select: { id: true },
+  });
+  if (!role) return { status: "error", message: { title: "Role not found" } };
+
+  if (membership.roleId === data.roleId) {
     return { status: "ok", data: null };
-  }
-
-  if (
-    membership.role === OrganizationRole.ADMIN &&
-    data.role !== OrganizationRole.ADMIN
-  ) {
-    const adminCount = await prisma.organizationMembership.count({
-      where: { organizationId: organization.id, role: OrganizationRole.ADMIN },
-    });
-
-    if (adminCount <= 1) {
-      return {
-        status: "error",
-        message: { title: "Organizations need at least one admin" },
-      };
-    }
   }
 
   await prisma.organizationMembership.update({
     where: { id: membership.id },
-    data: { role: data.role },
+    data: { roleId: data.roleId },
   });
 
   return {

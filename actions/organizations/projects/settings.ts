@@ -1,7 +1,7 @@
 "use server";
 
-import { requireOrganizationAdmin } from "../organization";
-import { requireProjectAdmin } from "./project";
+import { requireOrganizationPermission } from "../organization";
+import { requireProjectPermission } from "./project";
 import { canCreateProject } from "../check-permissions";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
@@ -18,8 +18,7 @@ export async function createProjectAction({
   description?: string;
 }): Promise<ServerActionResponse<{ project: { id: string; name: string } }>> {
   try {
-    // Only org admins can create projects
-    const { organization, user } = await requireOrganizationAdmin();
+    const { organization, user } = await requireOrganizationPermission("createProject");
 
     const permission = await canCreateProject();
     if (!permission.allowed) {
@@ -97,7 +96,7 @@ export async function updateProjectAction({
 }): Promise<ServerActionResponse> {
   try {
     // Only project admins can update
-    await requireProjectAdmin(projectId);
+    await requireProjectPermission(projectId, "manageSettings");
 
     if (!name.trim()) {
       return {
@@ -147,7 +146,7 @@ export async function deleteProjectAction(
 ): Promise<ServerActionResponse> {
   try {
     // Only project admins can delete
-    await requireProjectAdmin(projectId);
+    await requireProjectPermission(projectId, "manageSettings");
 
     await prisma.project.delete({
       where: { id: projectId },
@@ -189,7 +188,7 @@ export async function addProjectMemberAction({
 }): Promise<ServerActionResponse> {
   try {
     // Only project admins can add members
-    await requireProjectAdmin(projectId);
+    await requireProjectPermission(projectId, "manageMembers");
 
     // Verify user is an organization member
     const project = await prisma.project.findUnique({
@@ -283,7 +282,7 @@ export async function removeProjectMemberAction({
 }): Promise<ServerActionResponse> {
   try {
     // Only project admins can remove members
-    await requireProjectAdmin(projectId);
+    await requireProjectPermission(projectId, "manageMembers");
 
     await prisma.projectMembership.delete({
       where: { id: memberId },
@@ -325,7 +324,7 @@ export async function updateProjectMemberRoleAction({
 }): Promise<ServerActionResponse> {
   try {
     // Only project admins can update roles
-    await requireProjectAdmin(projectId);
+    await requireProjectPermission(projectId, "manageMembers");
 
     await prisma.projectMembership.update({
       where: { id: memberId },

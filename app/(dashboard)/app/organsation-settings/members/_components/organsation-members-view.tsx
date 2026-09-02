@@ -35,7 +35,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { OrganizationRole } from "@/lib/generated/prisma/browser";
 import { requireConfirmation } from "@/components/modals/confirmation-modal/use-confirmation";
 import {
   Loader2,
@@ -51,7 +50,7 @@ import useServerAction from "@/hooks/use-server-action";
 type Member = {
   id: string;
   createdAt: Date;
-  role: OrganizationRole;
+  role: { id: string; name: string };
   user: {
     email: string;
     name: string | null;
@@ -63,14 +62,18 @@ type Member = {
 type Invite = {
   id: string;
   email: string;
-  role: OrganizationRole;
+  role: { id: string; name: string };
   expiresAt: Date;
   createdAt: Date;
   acceptedAt: Date | null;
 };
 
 type OrgansationMembersViewProps = {
-  organization: { memberships: Member[]; invites: Invite[] };
+  organization: {
+    memberships: Member[];
+    invites: Invite[];
+    roles: Array<{ id: string; name: string }>;
+  };
   currentUserId: string;
 };
 
@@ -82,7 +85,7 @@ type MemberRow = {
   invitedAt: Date | null;
   joinedAt: Date | null;
   status: "active" | "invited";
-  role: OrganizationRole;
+  role: { id: string; name: string };
   inviteId?: string;
   userId: string | null;
 };
@@ -105,9 +108,7 @@ export function OrgansationMembersView({
   currentUserId,
 }: OrgansationMembersViewProps) {
   const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState<OrganizationRole>(
-    OrganizationRole.USER,
-  );
+  const [inviteRole, setInviteRole] = useState(organization.roles[0]?.id ?? "");
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -186,10 +187,10 @@ export function OrgansationMembersView({
 
   async function handleInvite(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const data = await inviteMember({ email: inviteEmail, role: inviteRole });
+    const data = await inviteMember({ email: inviteEmail, roleId: inviteRole });
     if (data !== null) {
       setInviteEmail("");
-      setInviteRole("USER");
+      setInviteRole(organization.roles[0]?.id ?? "");
       setInviteOpen(false);
     }
   }
@@ -218,9 +219,9 @@ export function OrgansationMembersView({
     }
   }
 
-  async function handleRoleChange(row: MemberRow, role: OrganizationRole) {
-    if (role !== row.role) {
-      await updateMemberRole({ membershipId: row.id, role });
+  async function handleRoleChange(row: MemberRow, roleId: string) {
+    if (roleId !== row.role.id) {
+      await updateMemberRole({ membershipId: row.id, roleId });
     }
   }
 
@@ -312,9 +313,9 @@ export function OrgansationMembersView({
                   <TableCell>
                     {row.status === "active" ? (
                       <Select
-                        value={row.role}
+                        value={row.role.id}
                         onValueChange={(value) =>
-                          handleRoleChange(row, value as OrganizationRole)
+                          handleRoleChange(row, value)
                         }
                         disabled={
                           updatingMemberRole || row.userId === currentUserId
@@ -324,20 +325,16 @@ export function OrgansationMembersView({
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value={OrganizationRole.USER}>
-                            User
-                          </SelectItem>
-                          <SelectItem value={OrganizationRole.ADMIN}>
-                            Admin
-                          </SelectItem>
-                          <SelectItem value={OrganizationRole.CREATOR}>
-                            Owner
-                          </SelectItem>
+                          {organization.roles.map((role) => (
+                            <SelectItem key={role.id} value={role.id}>
+                              {role.name}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     ) : (
                       <Badge variant="outline" className="capitalize">
-                        {row.role.toLowerCase()}
+                        {row.role.name}
                       </Badge>
                     )}
                   </TableCell>
@@ -413,18 +410,18 @@ export function OrgansationMembersView({
               <Select
                 value={inviteRole}
                 onValueChange={(value) =>
-                  setInviteRole(value as OrganizationRole)
+                  setInviteRole(value)
                 }
               >
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={OrganizationRole.USER}>User</SelectItem>
-                  <SelectItem value={OrganizationRole.ADMIN}>Admin</SelectItem>
-                  <SelectItem value={OrganizationRole.CREATOR}>
-                    Owner
-                  </SelectItem>
+                  {organization.roles.map((role) => (
+                    <SelectItem key={role.id} value={role.id}>
+                      {role.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

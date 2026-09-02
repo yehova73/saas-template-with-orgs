@@ -1,6 +1,6 @@
 "use server";
 
-import { requireOrganizationAdmin } from "@/actions/organizations/organization";
+import { requireOrganizationPermission } from "@/actions/organizations/organization";
 import { prisma } from "@/lib/prisma";
 import { stripe } from "./config";
 import { ServerActionResponse } from "@/hooks/use-server-action";
@@ -8,7 +8,7 @@ import { ServerActionResponse } from "@/hooks/use-server-action";
 export const cancelSubscriptionAction = async (): Promise<
   ServerActionResponse<null>
 > => {
-  const { organization } = await requireOrganizationAdmin();
+  const { organization } = await requireOrganizationPermission("manageBilling");
   const subscription = await prisma.subscription.findUnique({
     where: { organizationId: organization.id },
   });

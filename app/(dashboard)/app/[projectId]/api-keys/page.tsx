@@ -1,5 +1,5 @@
 import { getProjectApiKeys } from "@/actions/organizations/projects/api-keys";
-import { requireProjectAdmin } from "@/actions/organizations/projects/project";
+import { requireProjectPermission } from "@/actions/organizations/projects/project";
 import { DashboardPageHeader } from "@/components/dashboard-page-header";
 import { notFound } from "next/navigation";
 import { ApiKeysView } from "./_components/api-keys-view";
@@ -16,7 +16,7 @@ export default async function ApiKeysPage({ params }: ApiKeysPageProps) {
   const { projectId } = await params;
 
   try {
-    await requireProjectAdmin(projectId);
+    await requireProjectPermission(projectId, "manageSettings");
   } catch {
     notFound();
   }

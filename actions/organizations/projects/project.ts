@@ -2,6 +2,10 @@
 
 import { prisma } from "@/lib/prisma";
 import { getActiveOrganizationContext } from "../organization";
+import {
+  OrganizationPermission,
+  requireOrganizationPermission,
+} from "../organization";
 import { ServerActionResponse } from "@/hooks/use-server-action";
 
 /**
@@ -89,39 +93,19 @@ export async function getProjectWithMemberships(projectId: string) {
   return project;
 }
 
-/**
- * Require that the current user is an admin in the specified project
- * Throws an error if not
- */
-export async function requireProjectAdmin(projectId: string) {
-  const context = await getActiveOrganizationContext();
-
-  if (!context) {
-    throw new Error("No active organization");
-  }
-
-  const { user, membership, organization } = context;
-
-  // Org admins are automatically project admins
-  if (membership.role === "ADMIN") {
-    return { user, membership, organization, projectId };
-  }
-
-  // Check if user is a project admin
-  const projectMembership = await prisma.projectMembership.findUnique({
-    where: {
-      projectId_userId: {
-        projectId,
-        userId: user.id,
-      },
-    },
+export async function requireProjectPermission(
+  projectId: string,
+  permission: OrganizationPermission,
+) {
+  const context = await requireOrganizationPermission(permission);
+  const project = await prisma.project.findUnique({
+    where: { id: projectId },
+    select: { organizationId: true },
   });
-
-  if (!projectMembership || projectMembership.role !== "ADMIN") {
-    throw new Error("You do not have permission to manage this project");
+  if (!project || project.organizationId !== context.organization.id) {
+    throw new Error("Project does not belong to this organization");
   }
-
-  return { user, membership, organization, projectId };
+  return { ...context, projectId };
 }
 
 /**
