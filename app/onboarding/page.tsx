@@ -1,7 +1,7 @@
 import { getPotentialUserFromSession } from "@/actions/account/account";
-import { getUserOrganizationMemberships } from "@/actions/organizations/organization";
 import { redirect } from "next/navigation";
 import { OnboardingForm } from "./_components/onboarding-form";
+import { getUserOrganizationMemberships } from "@/actions/organizations/organization/context";
 
 export default async function OnboardingPage() {
   const user = await getPotentialUserFromSession();

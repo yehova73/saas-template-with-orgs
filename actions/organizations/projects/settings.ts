@@ -1,11 +1,11 @@
 "use server";
 
-import { requireOrganizationPermission } from "../organization";
 import { requireProjectPermission } from "./project";
 import { canCreateProject } from "../check-permissions";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { ServerActionResponse } from "@/hooks/use-server-action";
+import { requireOrganizationPermission } from "../organization/permissions";
 
 /**
  * Create a new project in the active organization

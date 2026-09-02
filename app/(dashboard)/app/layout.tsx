@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
 import { getPotentialUserFromSession } from "@/actions/account/account";
-import {
-  getActiveOrganizationContext,
-  getUserOrganizationMemberships,
-} from "@/actions/organizations/organization";
+
 import { getOrganizationProjects } from "@/actions/organizations/projects/project";
 import { PaymentCompleteModal } from "@/components/modals/payment-complete-modal/payment-complete-modal";
 import { NewProjectDialog } from "@/components/modals/new-project-modal/new-project-dialog";
@@ -23,6 +20,10 @@ import { UserDropdown } from "./_components/user-dropdown";
 import { ProjectsDropdown } from "./_components/projects-dropdown";
 import { SubscriptionGate } from "./_components/subscription-gate";
 import { getCurrentSubscriptionAction } from "@/actions/account/subscriptions/get-current-subscription";
+import {
+  getActiveOrganizationContext,
+  getUserOrganizationMemberships,
+} from "@/actions/organizations/organization/context";
 
 export const metadata: Metadata = {
   title: "[placeholder title] — Dashboard",
@@ -87,7 +88,12 @@ export default async function DashboardLayout({
           {/* {!hasOrganizations && <NoOrganizationsZeroState />} */}
 
           <div className="flex flex-1">
-            <AppSidebar />
+            <AppSidebar
+              projects={projects}
+              canCreateProject={
+                !!activeOrganizationContext?.membership.role.createProject
+              }
+            />
             {/* overflow-auto max-h-[calc(100vh-48px)] */}
             <SidebarInset>
               <header className="sticky top-0 flex h-12 shrink-0 items-center gap-2 border-b bg-background px-4">

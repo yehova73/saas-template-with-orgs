@@ -15,6 +15,7 @@ export const getOrganizationInviteByToken = async (token: string) => {
     include: {
       organization: { select: { id: true, name: true } },
       role: { select: { id: true, name: true } },
+      project: { select: { id: true, name: true } },
     },
   });
 
@@ -30,6 +31,7 @@ export const getOrganizationInviteByToken = async (token: string) => {
     id: invite.id,
     email: invite.email,
     role: invite.role,
+    project: invite.project,
     organization: invite.organization,
   };
 };
@@ -40,7 +42,18 @@ const acceptInviteForUser = async (params: {
 }) => {
   const invite = await prisma.organizationInvite.findUnique({
     where: { tokenHash: hashInviteToken(params.token) },
-    include: { organization: true },
+    select: {
+      id: true,
+      email: true,
+      organizationId: true,
+      roleId: true,
+      projectId: true,
+      projectRole: true,
+      acceptedAt: true,
+      revokedAt: true,
+      expiresAt: true,
+      organization: true,
+    },
   });
 
   if (
@@ -61,8 +74,8 @@ const acceptInviteForUser = async (params: {
     throw new Error("This invite belongs to a different email address");
   }
 
-  await prisma.$transaction([
-    prisma.organizationMembership.upsert({
+  await prisma.$transaction(async (transaction) => {
+    await transaction.organizationMembership.upsert({
       where: {
         userId_organizationId: {
           userId: user.id,
@@ -75,12 +88,25 @@ const acceptInviteForUser = async (params: {
         roleId: invite.roleId,
       },
       update: {},
-    }),
-    prisma.organizationInvite.update({
+    });
+    if (invite.projectId) {
+      await transaction.projectMembership.upsert({
+        where: {
+          projectId_userId: { projectId: invite.projectId, userId: user.id },
+        },
+        create: {
+          projectId: invite.projectId,
+          userId: user.id,
+          role: invite.projectRole || "USER",
+        },
+        update: {},
+      });
+    }
+    await transaction.organizationInvite.update({
       where: { id: invite.id },
       data: { acceptedAt: new Date() },
-    }),
-  ]);
+    });
+  });
 
   return invite.organizationId;
 };
@@ -142,6 +168,8 @@ export const acceptOrganizationInviteByIdAction = async (
       revokedAt: true,
       expiresAt: true,
       roleId: true,
+      projectId: true,
+      projectRole: true,
     },
   });
 
@@ -164,8 +192,8 @@ export const acceptOrganizationInviteByIdAction = async (
     };
   }
 
-  await prisma.$transaction([
-    prisma.organizationMembership.upsert({
+  await prisma.$transaction(async (transaction) => {
+    await transaction.organizationMembership.upsert({
       where: {
         userId_organizationId: {
           userId: session.user.id,
@@ -178,12 +206,28 @@ export const acceptOrganizationInviteByIdAction = async (
         roleId: invite.roleId,
       },
       update: {},
-    }),
-    prisma.organizationInvite.update({
+    });
+    if (invite.projectId) {
+      await transaction.projectMembership.upsert({
+        where: {
+          projectId_userId: {
+            projectId: invite.projectId,
+            userId: session.user.id,
+          },
+        },
+        create: {
+          projectId: invite.projectId,
+          userId: session.user.id,
+          role: invite.projectRole || "USER",
+        },
+        update: {},
+      });
+    }
+    await transaction.organizationInvite.update({
       where: { id: invite.id },
       data: { acceptedAt: new Date() },
-    }),
-  ]);
+    });
+  });
 
   return {
     status: "ok",

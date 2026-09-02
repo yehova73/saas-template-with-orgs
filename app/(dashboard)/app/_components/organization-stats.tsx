@@ -1,7 +1,7 @@
-import { getActiveOrganizationContext } from "@/actions/organizations/organization";
 import { prisma } from "@/lib/prisma";
 import { StatUI } from "@/components/ui/stats";
 import { CheckCircle2, ClipboardList, FolderKanban, Users } from "lucide-react";
+import { getActiveOrganizationContext } from "@/actions/organizations/organization/context";
 
 export async function OrganizationStats() {
   const context = await getActiveOrganizationContext();

@@ -1,8 +1,8 @@
 "use server";
 
-import { requireOrganizationPermission } from "@/actions/organizations/organization";
 import { prisma } from "@/lib/prisma";
 import { stripe } from "./config";
+import { requireOrganizationPermission } from "@/actions/organizations/organization/permissions";
 
 const INVOICES_PER_PAGE = 10;
 

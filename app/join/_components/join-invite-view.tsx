@@ -22,6 +22,7 @@ type JoinInviteViewProps = {
   invite: {
     email: string;
     role: { id: string; name: string };
+    project: { id: string; name: string } | null;
     organization: { id: string; name: string };
   } | null;
 };
@@ -83,6 +84,11 @@ export function JoinInviteView({
           <p className="text-sm text-muted-foreground">
             Invited as {invite.role.name} using {invite.email}.
           </p>
+          {invite.project && (
+            <p className="text-sm text-muted-foreground">
+              Project: {invite.project.name}
+            </p>
+          )}
         </div>
       </div>
 

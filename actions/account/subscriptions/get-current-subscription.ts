@@ -1,9 +1,9 @@
 "use server";
 
-import { requireActiveOrganization } from "@/actions/organizations/organization";
 import { prisma } from "@/lib/prisma";
 import { SubscriptionType } from "@/lib/generated/prisma/enums";
 import { FeatureAccessConfig } from "@/lib/subscriptions";
+import { requireActiveOrganization } from "@/actions/organizations/organization/context";
 
 export const getCurrentSubscriptionAction = async () => {
   const { organization } = await requireActiveOrganization();
@@ -24,7 +24,7 @@ export const getCurrentSubscriptionAction = async () => {
     const newFeatureAccess = await prisma.organizationFeatureAccess.create({
       data: {
         organizationId: organization.id,
-        ...FeatureAccessConfig[SubscriptionType.FREE],
+        ...FeatureAccessConfig[SubscriptionType.STARTER],
       },
     });
 

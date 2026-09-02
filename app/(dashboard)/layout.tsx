@@ -1,11 +1,11 @@
 import { getPotentialUserFromSession } from "@/actions/account/account";
-import { getUserOrganizationMemberships } from "@/actions/organizations/organization";
 import { ConfirmationModal } from "@/components/modals/confirmation-modal/confirmation-modal";
 import { redirect } from "next/navigation";
 import type React from "react";
 import { CreateOrganizationModal } from "../../components/modals/create-organization-modal/create-organization-modal";
 import { UpgradeSubscriptionDialog } from "@/components/modals/upgrade-subscription-modal/upgrade-subscription-dialog";
 import { FeedbackDialog } from "@/components/modals/feedback-modal/feedback-dialog";
+import { getUserOrganizationMemberships } from "@/actions/organizations/organization/context";
 
 export default async function DashboardLayout({
   children,

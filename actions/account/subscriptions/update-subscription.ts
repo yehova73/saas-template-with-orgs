@@ -1,11 +1,11 @@
 "use server";
 
-import { requireOrganizationPermission } from "@/actions/organizations/organization";
 import { prisma } from "@/lib/prisma";
 import { stripe } from "./config";
 import { getCurrentSubscriptionAction } from "./get-current-subscription";
 import { handleSubscriptionStatusUpdate } from "./handle-subscription-status-update";
 import { ServerActionResponse } from "@/hooks/use-server-action";
+import { requireOrganizationPermission } from "@/actions/organizations/organization/permissions";
 
 export const changeSubscriptionAction = async (
   newPriceId: string,

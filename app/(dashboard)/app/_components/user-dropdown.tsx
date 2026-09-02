@@ -23,6 +23,7 @@ import {
   Plus,
   Settings,
   Sun,
+  UserPlus,
 } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
@@ -152,6 +153,10 @@ export const UserDropdown: React.FC<{
           <DropdownMenuItem onClick={() => router.push(`/app/settings`)}>
             <Settings />
             Account Settings
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => router.push(`/app/invites`)}>
+            <UserPlus />
+            Invites
           </DropdownMenuItem>
         </DropdownMenuGroup>
 

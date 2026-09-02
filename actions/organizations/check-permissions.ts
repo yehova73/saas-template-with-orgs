@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { requireActiveOrganization } from "./organization";
+import { requireActiveOrganization } from "./organization/context";
 
 type PermissionResult =
   | { allowed: true }

@@ -35,7 +35,7 @@ export function SettingRow({
   children: React.ReactNode;
 }) {
   return (
-    <div className="p-4 grid grid-cols-[minmax(0,1fr)_auto] gap-4 items-center">
+    <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-4 items-center">
       <div className="min-w-0">
         <div className="text-sm font-medium">{title}</div>
         {desc && (

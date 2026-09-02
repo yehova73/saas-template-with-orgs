@@ -17,80 +17,71 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import {
-  ClipboardList,
-  LayoutDashboard,
-  Settings,
-  Building2,
-  KeyRound,
   ChevronRight,
-  Settings2,
-  Users2,
-  CreditCard,
+  ClipboardList,
+  Code,
+  KeyRound,
+  LayoutDashboard,
+  Plus,
+  Settings,
 } from "lucide-react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
 import { Logo } from "../logo";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "../ui/collapsible";
+import { useChangeActiveProject } from "@/hooks/use-change-active-project";
+import { useNewProjectModal } from "../modals/new-project-modal/use-new-project-modal";
 
-export const AppSidebar: React.FC = ({}) => {
+export const AppSidebar: React.FC<{
+  projects: { id: string; name: string }[];
+  canCreateProject: boolean;
+}> = ({ projects, canCreateProject }) => {
   const path = usePathname();
   const { open } = useSidebar();
   const { data: session } = useSession();
-  const projectId = session?.user?.activeProjectId;
+  const localActiveProjectId = session?.user?.activeProjectId;
+  const { changeProject } = useChangeActiveProject();
+  const { openDialog: openNewProject } = useNewProjectModal();
 
-  const navItems = projectId
+  const navItems: {
+    title: string;
+    url: string;
+    icon: React.ReactNode;
+    items?: { title: string; url: string; icon: React.ReactNode }[];
+  }[] = localActiveProjectId
     ? [
         {
           title: "Overview",
-          url: `/app/${projectId}`,
+          url: `/app/${localActiveProjectId}`,
           icon: <LayoutDashboard />,
         },
         {
           title: "Requests",
-          url: `/app/${projectId}/requests`,
+          url: `/app/${localActiveProjectId}/requests`,
           icon: <ClipboardList />,
         },
         {
           title: "Api Keys",
-          url: `/app/${projectId}/api-keys`,
+          url: `/app/${localActiveProjectId}/api-keys`,
           icon: <KeyRound />,
         },
         {
           title: "Settings",
-          url: `/app/${projectId}/settings`,
+          url: `/app/${localActiveProjectId}/settings`,
           icon: <Settings />,
         },
       ]
-    : [
-        { title: "Overview", url: "/app", icon: <LayoutDashboard /> },
-        {
-          title: "Organization Settings",
-          url: "#",
-          icon: <Settings />,
-          items: [
-            {
-              title: "General",
-              url: "/app/organsation-settings",
-              icon: <Building2 />,
-            },
-            {
-              title: "Members",
-              url: "/app/organsation-settings/members",
-              icon: <Users2 />,
-            },
-            {
-              title: "Billing",
-              url: "/app/organsation-settings/billing",
-              icon: <CreditCard />,
-            },
-          ],
-        },
-      ];
+    : [{ title: "Overview", url: "/app", icon: <LayoutDashboard /> }];
+
+  async function handleProjectChange(projectId: string) {
+    if (projectId === localActiveProjectId) return;
+    await changeProject(projectId);
+  }
 
   return (
     <Sidebar id="onborda-sidebar" collapsible="icon">
@@ -155,9 +146,50 @@ export const AppSidebar: React.FC = ({}) => {
             )}
           </SidebarMenu>
         </SidebarGroup>
+        {!localActiveProjectId && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Projects</SidebarGroupLabel>
+            <SidebarMenu>
+              {projects.map((project) => (
+                <SidebarMenuItem key={project.id}>
+                  <SidebarMenuButton
+                    onClick={() => handleProjectChange(project.id)}
+                  >
+                    <Code />
+                    {project.name}
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+              {canCreateProject && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton onClick={openNewProject}>
+                    <Plus />
+                    Add Project
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+            </SidebarMenu>
+          </SidebarGroup>
+        )}
 
         {open && (
-          <SidebarFooter className="mt-auto pb-0">
+          <SidebarFooter className="mt-auto pb-2">
+            <SidebarMenu>
+              <Link
+                href="/app/organization-settings"
+                className="flex w-full cursor-pointer"
+              >
+                <SidebarMenuItem className="w-full cursor-pointer">
+                  <SidebarMenuButton
+                    isActive={path === "/app/organization-settings"}
+                    className="w-full cursor-pointer"
+                  >
+                    <Settings />
+                    Organization Settings
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </Link>
+            </SidebarMenu>
             {/* {subscription.isTrial && (
               <>
                 <Card className="w-full bg-blue-200 border-blue-300/50">

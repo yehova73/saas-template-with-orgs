@@ -1,10 +1,13 @@
 import {
-  getProjectWithMemberships,
   getOrganizationMembers,
+  getProjectWithMemberships,
   requireProjectPermission,
 } from "@/actions/organizations/projects/project";
+import { prisma } from "@/lib/prisma";
 import { DashboardPageHeader } from "@/components/dashboard-page-header";
-import { ProjectSettingsView } from "./_components/project-settings-view";
+import { ProjectDetailsSettings } from "./_components/project-details-settings";
+import { ProjectMembersSettings } from "./_components/project-settings-members";
+import { ProjectDangerZoneSettings } from "./_components/project-danger-zone-settings";
 
 export const metadata = {
   title: "Project Settings",
@@ -26,14 +29,29 @@ export default async function ProjectSettingsPage({
     getProjectWithMemberships(projectId),
     getOrganizationMembers(),
   ]);
+  const organizationRoles = await prisma.organizationUserRole.findMany({
+    where: { organizationId: project.organizationId },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true },
+  });
 
   return (
-    <div className="w-full space-y-6">
+    <div className="w-full space-y-6 mx-auto max-w-7xl">
       <DashboardPageHeader
-        title={`${project.name} Settings`}
+        title={`Project settings for "${project.name}"`}
         description="Manage project details and members"
       />
-      <ProjectSettingsView project={project} availableMembers={orgMembers} />
+      <ProjectDetailsSettings project={project} />
+      <ProjectMembersSettings
+        memberships={project.memberships}
+        availableMembers={orgMembers}
+        organizationRoles={organizationRoles}
+        projectId={projectId}
+      />
+      <ProjectDangerZoneSettings
+        project={project}
+        availableMembers={orgMembers}
+      />
     </div>
   );
 }

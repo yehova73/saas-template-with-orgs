@@ -1,6 +1,7 @@
 "use client";
 
 import { acceptOrganizationInviteByIdAction } from "@/actions/organizations/join";
+import { DashboardPageHeader } from "@/components/dashboard-page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,6 +19,7 @@ type Invite = {
   id: string;
   email: string;
   role: { id: string; name: string };
+  project: { id: string; name: string } | null;
   expiresAt: Date;
   createdAt: Date;
   organization: { id: string; name: string };
@@ -29,19 +31,18 @@ export function InvitesView({ invites }: { invites: Invite[] }) {
   );
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold">Organization invites</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Review invitations sent to your account and join an organization.
-        </p>
-      </div>
+    <div className="space-y-6 mx-auto max-w-7xl w-full">
+      <DashboardPageHeader
+        title="Organization Invites"
+        description="Review invitations sent to your account and join an organization."
+      />
 
       <div className="rounded-xl border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Organization</TableHead>
+              <TableHead>Project</TableHead>
               <TableHead>Role</TableHead>
               <TableHead>Received</TableHead>
               <TableHead>Expires</TableHead>
@@ -52,7 +53,7 @@ export function InvitesView({ invites }: { invites: Invite[] }) {
             {invites.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={5}
+                  colSpan={6}
                   className="h-28 text-center text-muted-foreground"
                 >
                   You have no pending organization invites.
@@ -64,6 +65,7 @@ export function InvitesView({ invites }: { invites: Invite[] }) {
                   <TableCell className="font-medium">
                     {invite.organization.name}
                   </TableCell>
+                  <TableCell>{invite.project?.name || "-"}</TableCell>
                   <TableCell>
                     <Badge variant="outline" className="capitalize">
                       {invite.role.name}

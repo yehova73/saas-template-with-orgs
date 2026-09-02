@@ -1,12 +1,13 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { getActiveOrganizationContext } from "../organization";
+
+import { ServerActionResponse } from "@/hooks/use-server-action";
+import { getActiveOrganizationContext } from "../organization/context";
 import {
   OrganizationPermission,
   requireOrganizationPermission,
-} from "../organization";
-import { ServerActionResponse } from "@/hooks/use-server-action";
+} from "../organization/permissions";
 
 /**
  * Get all projects for the active organization
@@ -24,6 +25,11 @@ export async function getOrganizationProjects() {
   const projects = await prisma.project.findMany({
     where: {
       organizationId: organization.id,
+      memberships: {
+        some: {
+          userId: context.user.id,
+        },
+      },
     },
     include: {
       memberships: {

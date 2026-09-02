@@ -35,7 +35,7 @@ export function UnsubscribeModal({
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  onConfirm: () => void | Promise<void>;
+  onConfirm: () => void | Promise<void | null | undefined>;
 }) {
   const [step, setStep] = useState(0);
   const [reason, setReason] = useState("");

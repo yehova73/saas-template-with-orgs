@@ -1,11 +1,11 @@
 import { getUserFromSession } from "@/actions/account/account";
-import { getActiveOrganizationContext } from "@/actions/organizations/organization";
 import { getOrganizationProjects } from "@/actions/organizations/projects/project";
 import { DashboardPageHeader } from "@/components/dashboard-page-header";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { OrganizationStats } from "./_components/organization-stats";
 import { ProjectsList } from "./_components/projects-list";
+import { getActiveOrganizationContext } from "@/actions/organizations/organization/context";
 
 const DashboardPage: React.FC = async () => {
   const user = await getUserFromSession();

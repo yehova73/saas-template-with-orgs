@@ -4,7 +4,6 @@ import { ServerActionResponse } from "@/hooks/use-server-action";
 import { emailService } from "@/lib/emails/email-service";
 import { prisma } from "@/lib/prisma";
 import { addDays } from "date-fns";
-import { requireOrganizationPermission } from "./organization";
 import { canInviteMember } from "./check-permissions";
 import {
   createInviteToken,
@@ -13,6 +12,8 @@ import {
   INVITE_EXPIRATION_DAYS,
   buildInviteUrl,
 } from "./utils";
+import { requireOrganizationPermission } from "./organization/permissions";
+import { ProjectRole } from "@/lib/generated/prisma/enums";
 
 export const updateOrganizationNameAction = async (data: {
   name: string;
@@ -92,6 +93,8 @@ export const deleteOrganizationAction = async (): Promise<
 export const inviteOrganizationMemberAction = async (data: {
   email: string;
   roleId: string;
+  projectId?: string;
+  projectRole?: ProjectRole;
 }): Promise<ServerActionResponse<{ id: string }>> => {
   const { organization, user } =
     await requireOrganizationPermission("manageMembers");
@@ -112,6 +115,31 @@ export const inviteOrganizationMemberAction = async (data: {
     return {
       status: "error",
       message: { title: "Email is required" },
+    };
+  }
+
+  const role = await prisma.organizationUserRole.findFirst({
+    where: { id: data.roleId, organizationId: organization.id },
+    select: { id: true },
+  });
+
+  if (!role) {
+    return { status: "error", message: { title: "Role not found" } };
+  }
+
+  if (data.projectId) {
+    const project = await prisma.project.findFirst({
+      where: { id: data.projectId, organizationId: organization.id },
+      select: { id: true },
+    });
+
+    if (!project) {
+      return { status: "error", message: { title: "Project not found" } };
+    }
+  } else if (data.projectRole) {
+    return {
+      status: "error",
+      message: { title: "Project role requires a project" },
     };
   }
 
@@ -154,6 +182,8 @@ export const inviteOrganizationMemberAction = async (data: {
       organizationId: organization.id,
       email,
       roleId: data.roleId,
+      projectId: data.projectId || null,
+      projectRole: data.projectId ? data.projectRole || "USER" : null,
       tokenHash: hashInviteToken(token),
       expiresAt: addDays(new Date(), INVITE_EXPIRATION_DAYS),
       invitedByUserId: user.id,

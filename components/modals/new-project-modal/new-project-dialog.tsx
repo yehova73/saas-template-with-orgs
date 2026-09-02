@@ -42,7 +42,7 @@ export function NewProjectDialog() {
     }
 
     const data = await createProject({ name, description });
-    if (data !== null) {
+    if (data !== null && data?.project) {
       const project = data.project;
       closeDialog();
       setName("");
